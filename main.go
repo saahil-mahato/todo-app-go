@@ -2,7 +2,8 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"net/http"
+	"text/template"
 	"todo-app/models"
 	"todo-app/services"
 
@@ -23,11 +24,15 @@ func main() {
 	}()
 	collection := client.Database("test").Collection("todos")
 
-	var todoPayload models.Todo
+	tmpl := template.Must(template.ParseFiles("ui/layout.html"))
 
-	todoPayload.Title = "Task 1"
-	todoPayload.Description = "Description 1"
-	todoPayload.IsCompleted = true
-
-	fmt.Println(services.AddTodo(collection, todoPayload))
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		data := models.TodosData{
+			PageTitle: "My todo list",
+			Todos:     services.GetAllTodos(collection),
+			AddTodo:   services.AddTodo,
+		}
+		tmpl.Execute(w, data)
+	})
+	http.ListenAndServe(":3000", nil)
 }

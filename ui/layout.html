@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <title>Todo App</title>
+  </head>
+  <body>
+    <div>
+      <h1>Todo app</h1>
+      <button>Add Todo</button>
+    </div>
+    <ul>
+      {{range .Todos}}
+        {{if .IsCompleted}}
+          <li>
+            <h3>{{.Title}}</h3>
+            <p>{{.Description}}</p>
+          </li>
+        {{else}}
+          <li>
+            <h3>{{.Title}}</h3>
+            <p>{{.Description}}</p>
+          </li>
+        {{end}}
+      {{end}}
+    </ul>
+  </body>
+</html>
