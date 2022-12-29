@@ -1,28 +1,167 @@
 <!DOCTYPE html>
 
 <html lang="en">
+
   <head>
     <title>Todo App</title>
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+
+      .wrapper {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .todos-card {
+        min-width: 30%;
+        min-height: 50%;
+        padding: 24px;
+        border: 2px solid black;
+      }
+
+      .add-form {
+        margin-top: 24px;
+        padding: 8px;
+        border: solid 1px blue;
+        border-radius: 5px;
+      }
+
+      .form-field {
+        margin: 8px 0;
+      }
+
+      .completed {
+        text-decoration: line-through;
+      }
+
+      .list-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 24px;
+      }
+
+      .todo-card {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 8px 0;
+        padding: 4px;
+        border-left: 5px solid green;
+        background-color: lavender;
+      }
+    </style>
   </head>
+
   <body>
-    <div>
-      <h1>Todo app</h1>
-      <button>Add Todo</button>
+
+    <div class="wrapper">
+
+      <div class="todos-card">
+        <h1>Todo app</h1>
+
+        <form class="add-form" method="post">
+          <div class="form-field">
+            <label for="title">Title</label>
+            <input name="title" type="text">
+          </div>
+          <div class="form-field">
+            <label for="description">Description</label>
+            <input name="description" type="text">
+          </div>
+          <input type="submit" value="Add Todo">
+        </form>
+        
+        <div class="list-header">
+          <h2>Todos</h2>
+          <button class="complete-all-button">Complete All</button>
+        </div>
+        <div class="todo-list">
+          {{range .Todos}}
+            {{if .IsCompleted}}
+              <div class="todo-card">
+                <div>
+                  <h3 class="completed">{{.Title}}</h3>
+                  <p class="completed">{{.Description}}</p>
+                </div>
+                <button class="delete-button" objectId={{.ObjectId}}>Delete</button>
+              </div>
+            {{else}}
+              <div class="todo-card">
+                <div>
+                  <h3>{{.Title}}</h3>
+                  <p>{{.Description}}</p>
+                </div>
+                <div>
+                  <button class="complete-button" objectId={{.ObjectId}}>Complete</button>
+                  <button class="delete-button" objectId={{.ObjectId}}>Delete</button>
+                </div>
+              </div>
+            {{end}}
+          {{end}}
+        </div>
+      </div>
+
     </div>
-    <ul>
-      {{range .Todos}}
-        {{if .IsCompleted}}
-          <li>
-            <h3>{{.Title}}</h3>
-            <p>{{.Description}}</p>
-          </li>
-        {{else}}
-          <li>
-            <h3>{{.Title}}</h3>
-            <p>{{.Description}}</p>
-          </li>
-        {{end}}
-      {{end}}
-    </ul>
+
+    <script>
+      const addTodo = async (data) => {
+        const formData = Object.fromEntries(new FormData(data).entries());
+        await fetch('http://localhost:3000/add-todo', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        })
+      };
+      document.querySelector('.add-form').addEventListener('submit', async (event) => {
+        await addTodo(event.target);
+        window.location.reload();
+      });
+
+      const completeTodo = async (id) => {
+        await fetch(`http://localhost:3000/complete-todo/${id}`, {
+          method: 'PATCH',
+        })
+      };
+      document.querySelectorAll('.complete-button').forEach((element) => {
+        element.addEventListener('click', async (event) => {
+          await completeTodo(event.target.getAttribute('objectId'));
+          window.location.reload();
+        });
+      });
+
+      const deleteTodo = async (id) => {
+        await fetch(`http://localhost:3000/delete-todo/${id}`, {
+          method: 'DELETE'
+        });
+      };
+      document.querySelectorAll('.delete-button').forEach((element) => {
+        element.addEventListener('click', async (event) => {
+          await deleteTodo(event.target.getAttribute('objectId'));
+          window.location.reload();
+        });
+      });
+
+      const completeAllTodo = async () => {
+        await fetch(`http://localhost:3000/complete-all-todos`, {
+          method: 'PATCH'
+        })
+      }
+      document.querySelector('.complete-all-button').addEventListener('click', async (event) => {
+        await completeAllTodo();
+        window.location.reload();
+      });
+    </script>
+
   </body>
+
 </html>

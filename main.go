@@ -2,7 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
+	"strings"
 	"text/template"
 	"todo-app/models"
 	"todo-app/services"
@@ -30,9 +33,40 @@ func main() {
 		data := models.TodosData{
 			PageTitle: "My todo list",
 			Todos:     services.GetAllTodos(collection),
-			AddTodo:   services.AddTodo,
 		}
 		tmpl.Execute(w, data)
 	})
+
+	http.HandleFunc("/add-todo", func(w http.ResponseWriter, r *http.Request) {
+		reqBody, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			panic(err)
+		}
+
+		var todoPayload models.Todo
+		todoPayload.IsCompleted = false
+
+		err = json.Unmarshal(reqBody, &todoPayload)
+		if err != nil {
+			panic(err)
+		}
+
+		services.AddTodo(collection, todoPayload)
+	})
+
+	http.HandleFunc("/delete-todo/", func(w http.ResponseWriter, r *http.Request) {
+		id := strings.TrimPrefix(r.URL.Path, "/delete-todo/")
+		services.DeleteTodo(collection, id)
+	})
+
+	http.HandleFunc("/complete-todo/", func(w http.ResponseWriter, r *http.Request) {
+		id := strings.TrimPrefix(r.URL.Path, "/complete-todo/")
+		services.CompleteTodo(collection, id)
+	})
+
+	http.HandleFunc("/complete-all-todos", func(w http.ResponseWriter, r *http.Request) {
+		services.CompleteAllTodos(collection)
+	})
+
 	http.ListenAndServe(":3000", nil)
 }
